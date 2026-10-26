@@ -15,7 +15,7 @@ access, and no `pip install`.
     client = Anthropic()
 
 Every line after that first import is IDENTICAL to the real course code. Take your
-finished lab notebook home, add a real ANTHROPIC_API_KEY, and the same cells call the
+finished lab notebook home, add a real FUELIX_API_KEY, and the same cells call the
 real Claude API - this module steps out of the way automatically.
 
 WHAT THIS IS NOT
@@ -131,13 +131,49 @@ def _module_importable(name: str) -> bool:
         return False
 
 
+FUELIX_BASE_URL = "https://api.fuelix.ai"
+
+
+def _fuelix_key() -> str:
+    """The Fuel iX API key from the environment, or "" when none is usable."""
+    key = os.environ.get("FUELIX_API_KEY", "").strip()
+    if key.lower().startswith(("your", "paste", "changeme")):
+        return ""
+    return key
+
+
+def _export_fuelix_env() -> None:
+    """Let a bare, real ``anthropic.Anthropic()`` reach Fuel iX too.
+
+    With a Fuel iX key present the shim is not installed and the notebook gets the
+    real SDK class directly, so give the SDK its own variables for the same thing.
+    """
+    key = _fuelix_key()
+    if key:
+        os.environ.setdefault("ANTHROPIC_BASE_URL", os.environ.get("FUELIX_BASE_URL", FUELIX_BASE_URL))
+        os.environ.setdefault("ANTHROPIC_AUTH_TOKEN", key)
+
+
 def _has_real_key() -> bool:
     # An explicit override, so an instructor who has a key on their machine can still
     # record or verify the offline experience the students will actually get.
     if os.environ.get("SHOPASSIST_LAB_FORCE_SIM", "").strip().lower() in ("1", "true", "yes"):
         return False
-    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    return bool(key) and not key.lower().startswith(("your", "sk-ant-xxx", "changeme"))
+    return bool(_fuelix_key())
+
+
+def _fuelix_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    """Point the real SDK at the Fuel iX gateway unless the caller chose otherwise.
+
+    Fuel iX serves the native Anthropic Messages API, so the official SDK is used
+    as-is; only the address and the credential differ. The key travels as a bearer
+    token (auth_token), not as the x-api-key header an Anthropic key would use.
+    """
+    out = dict(kwargs)
+    out.setdefault("base_url", os.environ.get("FUELIX_BASE_URL", FUELIX_BASE_URL))
+    if "api_key" not in out:
+        out.setdefault("auth_token", _fuelix_key())
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -817,7 +853,7 @@ FALLBACK = Scenario(
         "[simulated] I don't have a scripted answer for that one. The simulator matched "
         "no scenario, so this is a placeholder rather than a real reply.\n\n"
         "Call explain(message) to see what it looked for, or set a real "
-        "ANTHROPIC_API_KEY to get a genuine Claude response.",
+        "FUELIX_API_KEY to get a genuine Claude response.",
     ),
 )
 
@@ -2108,7 +2144,7 @@ class MockMessages:
         if stream:
             raise NotImplementedError(
                 "shopassist_lab does not simulate streaming. Set stream=False, or run "
-                "with a real ANTHROPIC_API_KEY. See lab_info() for the full gap list.")
+                "with a real FUELIX_API_KEY. See lab_info() for the full gap list.")
         for key in extra:
             if key in ("top_p", "top_k"):
                 continue
@@ -2271,7 +2307,7 @@ def _banner(live: bool) -> None:
         print("[shopassist_lab] LIVE MODE - real anthropic SDK, real API calls, real cost.")
     else:
         print("[shopassist_lab] SIMULATED MODE - replies are canned fixtures, not Claude.")
-        print("[shopassist_lab] No ANTHROPIC_API_KEY found, so everything runs offline.")
+        print("[shopassist_lab] No FUELIX_API_KEY found, so everything runs offline.")
         print("[shopassist_lab] Call lab_info() for details, explain(message) for any reply.")
 
 
@@ -2292,7 +2328,7 @@ def Anthropic(**kwargs: Any) -> Any:  # noqa: N802 - deliberately mirrors the SD
                 real = importlib.import_module("anthropic")
             if not getattr(real, "__shopassist_lab__", False):
                 _banner(live=True)
-                return real.Anthropic(**kwargs)
+                return real.Anthropic(**_fuelix_kwargs(kwargs))
         except Exception as exc:  # pragma: no cover - depends on the environment
             _warn_once("a key is set but the real anthropic SDK could not be loaded "
                        "({}). Falling back to the simulator.".format(exc))
@@ -2500,6 +2536,7 @@ def install(force: bool = False) -> None:
     anthropic at home would hit an authentication error on the first request. If the key
     arrives later, from load_dotenv(), Anthropic() still returns the real client.
     """
+    _export_fuelix_env()
     real_sdk = _module_importable("anthropic")
     if not force and real_sdk:
         _patch_real_sdk()
@@ -2562,7 +2599,7 @@ def lab_info() -> None:
     print("  Scenarios loaded: {}".format(len(SCENARIOS)))
     print("  Checks available: {}".format(", ".join(str(k) for k in sorted(TASKS))))
     print("")
-    print("  To run against the real API: set ANTHROPIC_API_KEY and re-run the notebook.")
+    print("  To run against the real API: set FUELIX_API_KEY and re-run the notebook.")
 
 
 def explain(message: Any) -> None:
@@ -2598,7 +2635,7 @@ def explain(message: Any) -> None:
 #
 # These checks are deliberately written against BEHAVIOUR, never against exact
 # fixture strings, so every one of them also passes when a student re-runs the
-# notebook with a real ANTHROPIC_API_KEY. They are themselves a worked example
+# notebook with a real FUELIX_API_KEY. They are themselves a worked example
 # of the course's Domain 4 topic: code-based grading.
 # ---------------------------------------------------------------------------
 

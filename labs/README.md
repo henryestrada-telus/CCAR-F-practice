@@ -5,7 +5,7 @@ Hands-on labs: a way to practise without an API key.
 **You do not need an API key.** Each lab ships with `shopassist_lab.py`, a small
 standard-library-only simulator of the `anthropic` SDK. The code you write is exactly the
 code you would write against the real API; the replies are canned fixtures chosen by rules,
-not a real model. Set `ANTHROPIC_API_KEY` in your environment (or in a `.env` file) and the
+not a real model. Set `FUELIX_API_KEY` in your environment (or in a `.env` file) and the
 very same notebook calls Claude for real.
 
 ## How to run a lab
@@ -23,7 +23,7 @@ notebook if you get stuck.
 
 The only requirement is Python 3.10+ and Jupyter (`pip install jupyter`). The `anthropic`,
 `python-dotenv`, `fastapi` and `pydantic` packages are optional: if they are missing, the simulator stands in for
-them. An installed `anthropic` is used only when `ANTHROPIC_API_KEY` is set (in the
+them. An installed `anthropic` is used only when `FUELIX_API_KEY` is set (in the
 environment or in `.env`); without a key the simulator answers, so no lab fails with an
 authentication error.
 

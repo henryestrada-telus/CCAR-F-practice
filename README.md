@@ -4,8 +4,8 @@ Companion code for the practice lessons of the **Claude Certified Architect - Fo
 
 | Folder | What it is |
 | --- | --- |
-| [`shopassist/`](shopassist/) | The practice project: one small Python script per lesson, all built on the same fictional support assistant, ShopAssist. Needs an Anthropic API key. |
-| [`starting-points/`](starting-points/) | The "before" version of the files that a lesson edits on screen, so you can replay the edits yourself. |
+| [`shopassist/`](shopassist/) | The practice project: one small Python script per lesson, all built on the same fictional support assistant, ShopAssist. Needs a Fuel iX API key. |
+| [`starting-points/`](starting-points/) | The "before" version of the files that a lesson edits on screen, so you can replay the edits yourself. Copy one over its `shopassist/` counterpart; they use the same `fuelix` helper. |
 | [`labs/`](labs/) | Jupyter notebooks to practise **without an API key**. |
 
 ## Setup
@@ -15,14 +15,22 @@ git clone https://github.com/termidy/CCAR-F-practice.git
 cd CCAR-F-practice/shopassist
 python3 -m venv .venv && source .venv/bin/activate      # Python 3.10+
 pip install -r requirements.txt
-cp .env.example .env                                    # put your key in .env, never in the code
+cp .env.example .env                                    # put your Fuel iX key in .env, never in the code
 ```
 
-`.env` holds one line, `ANTHROPIC_API_KEY=...`; every script loads it with `python-dotenv`. Some lessons also need [Claude Code](https://docs.claude.com/en/docs/claude-code) installed and logged in.
+`.env` holds one line, `FUELIX_API_KEY=...`. Get the key by creating a project in the [Fuel iX Dev Portal](https://dev.fuelix.ai).
+Every script builds its client with `fuelix.make_client()` ([`shopassist/fuelix.py`](shopassist/fuelix.py)), which loads `.env` with
+`python-dotenv` and points the official Anthropic SDK at the Fuel iX gateway: `base_url=https://api.fuelix.ai`, key sent as a bearer
+token. Fuel iX serves the native Anthropic Messages API, so nothing else in the scripts changes.
+
+Fuel iX is only used by the Python scripts and the labs, which call the Claude API directly. The lessons that run the `claude`
+command (MCP server, skills, CI review) use your own [Claude Code](https://docs.claude.com/en/docs/claude-code) installation and
+login, which need no Fuel iX configuration.
 
 The scripts use the current API: `claude-sonnet-5-5`, `output_config={"effort": "low"}`, structured outputs through
 `output_config.format`, and the `mcp` package 2.x for the MCP server. If something returns a 400, check the model id and the SDK
-version first (`anthropic>=1.12`).
+version first (`anthropic>=1.12`). Model ids must appear in the
+[Fuel iX model inventory](https://docs.fuelix.ai/docs/model-ranch); `claude-sonnet-5-5` does, and availability depends on your organisation.
 
 ## The lessons
 
@@ -66,7 +74,7 @@ python first_request.py
 ## Labs
 
 [`labs/`](labs/) holds hands-on Jupyter notebooks, a way to practise **without an API key**: a small simulator stands in for the SDK, and
-the code you write is the code you would write against the real API. `labs/README.md` explains how to run them.
+the code you write is the code you would write against the real API. With `FUELIX_API_KEY` set, the same notebooks call Claude through Fuel iX. `labs/README.md` explains how to run them.
 
 ## License
 

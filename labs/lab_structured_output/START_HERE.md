@@ -11,7 +11,7 @@ fixtures, not a real model.
 What is real is everything you type. `max_tokens`, the effort level, your system prompt
 and your tools all genuinely change what comes back, so the lessons hold. And the
 code is exactly the code you would write against the real API - take this notebook
-home, set `ANTHROPIC_API_KEY`, and the same cells call Claude for real.
+home, set `FUELIX_API_KEY`, and the same cells call Claude for real.
 
 ## How to check your work
 

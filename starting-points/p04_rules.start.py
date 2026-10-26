@@ -1,8 +1,6 @@
-from dotenv import load_dotenv
-from anthropic import Anthropic
+from fuelix import make_client
 
-load_dotenv()
-client = Anthropic()
+client = make_client()
 
 MODEL = "claude-sonnet-5-5"
 SYSTEM = (

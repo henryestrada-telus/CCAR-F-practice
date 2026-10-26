@@ -1,11 +1,9 @@
-from dotenv import load_dotenv
-from anthropic import Anthropic
+from fuelix import make_client
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-load_dotenv()
-client = Anthropic()
+client = make_client()
 app = FastAPI()
 
 MODEL = "claude-sonnet-5-5"
